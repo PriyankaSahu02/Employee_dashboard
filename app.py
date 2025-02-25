@@ -50,8 +50,14 @@ else:
     blended_model = joblib.load("blended_model.pkl")
 
     # ------------------- Load Data -------------------
-    df = pd.read_csv(r"C:/Users/Lenovo/Downloads/Internship/Data_Science_Prj/Data/final_table.csv")
+    csv_url = "https://raw.githubusercontent.com/PriyankaSahu02/Employee_dashboard/refs/heads/main/final_table.csv"
 
+    @st.cache_data  # Cache the data to avoid reloading each time
+    def load_data():
+        return pd.read_csv(csv_url)
+
+    df = load_data()
+    
     # Handle Missing Values
     df.loc[:, "other_dept_name"] = df["other_dept_name"].fillna("None")
 
