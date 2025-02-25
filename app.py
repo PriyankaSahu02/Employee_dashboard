@@ -53,7 +53,7 @@ else:
     df = pd.read_csv(r"C:/Users/Lenovo/Downloads/Internship/Data_Science_Prj/Data/final_table.csv")
 
     # Handle Missing Values
-    df["other_dept_name"].fillna("None", inplace=True)
+    df.loc[:, "other_dept_name"] = df["other_dept_name"].fillna("None")
 
     # ------------------- Sidebar Filters -------------------
     st.sidebar.header("🔍 Employee Filters")
