@@ -6,6 +6,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, precision_score, roc_auc_score, classification_report, confusion_matrix, roc_curve
 from sklearn.preprocessing import LabelEncoder
+import urllib.request
 import plotly.graph_objects as go
 
 # Set Streamlit page configuration
@@ -43,20 +44,21 @@ if not st.session_state.get("logged_in"):
 else:
     logout()
 
-    # ------------------- Load Models -------------------
-    xgb_model = joblib.load("xgb_model.pkl")
-    rf_model = joblib.load("rf_model.pkl")
-    logreg_model = joblib.load("logreg_model.pkl")
-    blended_model = joblib.load("blended_model.pkl")
+    # ------------------- Load Models from GitHub -------------------
+    @st.cache_resource
+    def load_model_from_github(url):
+        file_name = url.split("/")[-1]
+        urllib.request.urlretrieve(url, file_name)
+        return joblib.load(file_name)
 
-    # ------------------- Load Data -------------------
-    csv_url = "https://raw.githubusercontent.com/PriyankaSahu02/Employee_dashboard/refs/heads/main/final_table.csv"
+    xgb_model = load_model_from_github("https://raw.githubusercontent.com/PriyankaSahu02/Employee_dashboard/main/xgb_model.pkl")
+    rf_model = load_model_from_github("https://raw.githubusercontent.com/PriyankaSahu02/Employee_dashboard/main/rf_model.pkl")
+    logreg_model = load_model_from_github("https://raw.githubusercontent.com/PriyankaSahu02/Employee_dashboard/main/logreg_model.pkl")
+    blended_model = load_model_from_github("https://raw.githubusercontent.com/PriyankaSahu02/Employee_dashboard/main/blended_model.pkl")
 
-    @st.cache_data  # Cache the data to avoid reloading each time
-    def load_data():
-        return pd.read_csv(csv_url)
-
-    df = load_data()
+    # ------------------- Load Data from GitHub -------------------
+    csv_url = "https://raw.githubusercontent.com/PriyankaSahu02/Employee_dashboard/main/final_table.csv"
+    df = pd.read_csv(csv_url)
     
     # Handle Missing Values
     df.loc[:, "other_dept_name"] = df["other_dept_name"].fillna("None")
@@ -93,7 +95,7 @@ else:
     if selected_primary_dept != "All":
         filtered_df = filtered_df[filtered_df["primary_dept_name"] == selected_primary_dept]
     if selected_other_dept == "None":
-        filtered_df = filtered_df[filtered_df["other_dept_name"].isna()]    
+        filtered_df = filtered_df[filtered_df["other_dept_name"] == "None"]  
     if selected_other_dept != "All":
         filtered_df = filtered_df[filtered_df["other_dept_name"] == selected_other_dept]
     if selected_title != "All":
@@ -232,8 +234,8 @@ else:
         input_data = pd.get_dummies(input_data, columns=["primary_dept_name", "last_performance_rating"], dtype=bool)
 
         # Load training feature names
-        train_features = joblib.load("training_features.pkl")
-
+        train_features = load_file_from_github("https://raw.githubusercontent.com/PriyankaSahu02/Employee_dashboard/main/training_features.pkl")
+    
         for col in train_features:
             if col not in input_data.columns:
                 input_data[col] = False  # Default missing one-hot encoded categories to 0
@@ -270,8 +272,8 @@ else:
     st.subheader("📈 Model Performance")
 
     def evaluate_model(model, model_name):
-        X_test = joblib.load("X_test.pkl")
-        y_test = joblib.load("y_test.pkl")
+        X_test = load_file_from_github("https://raw.githubusercontent.com/PriyankaSahu02/Employee_dashboard/main/X_test.pkl")
+        y_test = load_file_from_github("https://raw.githubusercontent.com/PriyankaSahu02/Employee_dashboard/main/y_test.pkl")
 
         y_pred = model.predict(X_test)
         y_prob = model.predict_proba(X_test)[:, 1]
